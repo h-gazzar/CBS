@@ -58,26 +58,26 @@ export default async (req, context) => {
   const baseId = process.env.AIRTABLE_BASE_ID || '';
   const table = process.env.AIRTABLE_TABLE || 'Submissions';
 
-  const maskedKey =
-    key ? `${key.slice(0, 4)}…${key.slice(-4)}` : '(missing)';
+  const maskedKey = key ? `${key.slice(0, 4)}…${key.slice(-4)}` : '(missing)';
+  const looksPAT = key.startsWith('pat'); // Airtable PATs begin with "pat"
 
   dbg('validate_env', {
     baseId_present: !!baseId,
     table,
     key_present: !!key,
     key_masked: maskedKey,
-    key_looks_pat: key.startsWith('pat_'),
+    key_looks_pat: looksPAT,
   });
 
-  if (!key || !key.startsWith('pat_')) {
+  if (!key || !looksPAT) {
     return respond(500, {
       ok: false,
-      error: 'Missing or invalid AIRTABLE_API_KEY (must start with pat_)',
+      error: 'Missing or invalid AIRTABLE_API_KEY (must start with "pat")',
       where: 'validate_env',
       hints: [
         'Create a Personal Access Token in Airtable',
         'Scope: data.records:write; grant base access',
-        'Add to Netlify env as AIRTABLE_API_KEY and redeploy',
+        'Add AIRTABLE_API_KEY in Netlify env and redeploy',
       ],
     });
   }
@@ -86,7 +86,10 @@ export default async (req, context) => {
       ok: false,
       error: 'Missing AIRTABLE_BASE_ID',
       where: 'validate_env',
-      hints: ['Find it in Airtable API docs for your base', 'Set AIRTABLE_BASE_ID in Netlify env and redeploy'],
+      hints: [
+        'Find it in Airtable API docs for your base',
+        'Set AIRTABLE_BASE_ID in Netlify env and redeploy',
+      ],
     });
   }
 
